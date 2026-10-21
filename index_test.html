@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="zh-Hant-HK">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#155bc2">
+  <title>抽獎結果查詢</title>
+
+  <style>
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      padding: 16px 12px;
+      min-height: 100vh;
+      background: #f3f6fb;
+      color: #18304b;
+      font-family:
+        system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    main {
+      width: 100%;
+      max-width: 480px;
+      margin: 20px auto;
+      padding: 24px 20px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 12px 40px #18304b0d;
+    }
+
+    .center { text-align: center; }
+
+    .icon {
+      margin-bottom: 12px;
+      font-size: 48px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #e5f5eb;
+      color: #23643c;
+      font-size: 14px;
+    }
+
+    .badge.waiting {
+      background: #fff1d5;
+      color: #875b10;
+    }
+
+    h1 {
+      margin: 12px 0 8px;
+      font-size: 28px;
+      line-height: 1.4;
+    }
+
+    p {
+      margin: 8px 0;
+      color: #617086;
+      line-height: 1.7;
+    }
+
+    .notice {
+      margin: 16px 0;
+      padding: 14px;
+      border-radius: 14px;
+      background: #f6f8fc;
+      color: #53647a;
+      line-height: 1.8;
+    }
+
+    .ticket-preview {
+      width: 100%;
+      margin: 0;
+      overflow: hidden;
+      border-radius: 12px;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .ticket-preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-touch-callout: none;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    input, button {
+      width: 100%;
+      min-height: 48px;
+      padding: 13px;
+      border-radius: 12px;
+      font: inherit;
+    }
+
+    input {
+      border: 1px solid #c8d3e2;
+      background: #ffffff;
+      color: #18304b;
+      font-size: 25px;
+      letter-spacing: 3px;
+    }
+
+    input:focus {
+      outline: 3px solid #155bc220;
+      border-color: #155bc2;
+    }
+
+    button {
+      margin-top: 10px;
+      border: 0;
+      background: #155bc2;
+      color: #ffffff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button:hover { background: #104ca5; }
+
+    button:focus-visible {
+      outline: 3px solid #82b1ff;
+      outline-offset: 3px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    .secondary {
+      background: #edf2f9;
+      color: #24466f;
+    }
+
+    .secondary:hover { background: #e1e9f5; }
+
+    .result {
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      background: #edf2f9;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      line-height: 1.8;
+    }
+
+    .result.win {
+      background: #e6f6ec;
+      color: #175c32;
+    }
+
+    .result.error, .result.nowin {
+      background: #fff0ed;
+      color: #943b29;
+    }
+
+    .queue {
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: 16px;
+      background: #155bc2;
+      color: #ffffff;
+      text-align: center;
+    }
+
+    .queue-letter {
+      margin: 6px 0;
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #718096;
+      line-height: 1.7;
+    }
+
+    .footer {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid #edf0f5;
+    }
+
+    .credit {
+      margin: 18px 0 0;
+      padding-top: 12px;
+      border-top: 1px solid #edf0f5;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .debug-details {
+      margin: 16px 0;
+      padding: 14px;
+      max-height: 360px;
+      overflow: auto;
+      border: 1px solid #f3d1c8;
+      border-radius: 12px;
+      background: #fff0ed;
+      color: #943b29;
+      text-align: left;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    #versionLabel:empty,
+    #updatedAt:empty {
+      display: none;
+    }
+
+    @media (max-width: 400px) {
+      main {
+        margin: 12px auto;
+        padding: 20px 16px;
+      }
+
+      h1 { font-size: 25px; }
+    }
+  </style>
+</head>
+
+<body>
+<main>
+
+  <section id="loadingView" class="center" aria-live="polite">
+    <div class="icon" aria-hidden="true">🎟️</div>
+    <h1>抽獎結果查詢</h1>
+    <p>正在讀取最新結果……</p>
+  </section>
+
+  <section id="waitingView" class="center" hidden>
+    <div class="icon" aria-hidden="true">🎟️</div>
+    <span class="badge waiting">結果尚未公佈</span>
+
+    <h1>遊戲尚未開始</h1>
+
+    <p>請留意現場公佈！</p>
+
+    <div class="notice">
+      請好好保管抽獎券，<br>
+      等遊戲開始後，跟返主持人嘅指示，<br>
+      就可以玩遊戲，贏取獎品啦！
+    </div>
+
+    <p id="waitingTicket" class="small" hidden></p>
+
+    <button id="refreshWaiting" type="button">
+      重新整理
+    </button>
+  </section>
+
+  <section id="checkerView" hidden>
+    <span class="badge">結果已公佈</span>
+
+    <h1>睇吓你有冇中獎！</h1>
+
+    <div id="ticketPreview" class="ticket-preview" oncontextmenu="return false;">
+      <img
+        id="ticketImage"
+        src="https://raw.githubusercontent.com/LTree0703/data-store-contents/main/ticket-template.png"
+        alt="抽獎券號碼位置示例"
+        draggable="false"
+      >
+    </div>
+
+    <p>輸入抽獎券上面嘅號碼，即可以查詢結果</p>
+
+    <form id="checkForm">
+      <label for="ticketInput">獎券號碼</label>
+
+      <input
+        id="ticketInput"
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        autocomplete="off"
+        placeholder="例如 0010"
+        aria-describedby="ticketHint"
+        required
+      >
+
+      <p id="ticketHint" class="small">輸入 10 或 0010</p>
+
+      <button id="checkButton" type="submit" disabled>
+        查吓有冇中獎
+      </button>
+    </form>
+
+    <div
+      id="result"
+      class="result"
+      role="status"
+      aria-live="polite"
+      hidden
+    ></div>
+
+    <div id="queueCard" class="queue" hidden>
+      <div>記得帶實體抽獎券去獎品換領處</div>
+      <div id="queueLetter" class="queue-letter"></div>
+      <div>換領時請將抽獎券交還工作人員。</div>
+    </div>
+
+    <button
+      id="refreshResults"
+      class="secondary"
+      type="button"
+    >
+      重新讀取最新結果
+    </button>
+
+    <div class="footer">
+      <p class="small">
+        得獎者請記得帶實體抽獎券去獎品換領處，每張中獎嘅券只能換領一次，換領時請將抽獎券交還工作人員。
+      </p>
+
+      <p id="versionLabel" class="small"></p>
+      <p id="updatedAt" class="small"></p>
+    </div>
+  </section>
+
+  <section id="errorView" class="center" hidden>
+    <div class="icon" aria-hidden="true">↻</div>
+
+    <h1>暫時未能讀取結果</h1>
+
+    <p>
+      可以試吓重新整理。<br>
+      如果仲係唔得，請向現場職員查詢。
+    </p>
+
+    <div class="notice">
+      讀唔到結果唔代表未中獎。<br>
+      請保留你張獎券，確認結果後先作處理。
+    </div>
+
+    <pre id="errorDetails" class="debug-details" hidden></pre>
+
+    <button id="retryButton" type="button">
+      再試一次
+    </button>
+  </section>
+
+  <noscript>
+    <p class="notice">
+      請啟用 JavaScript，或者向現場職員查詢結果。
+    </p>
+  </noscript>
+
+  <p class="credit">Created by IT Trainee 26 @AAHK</p>
+
+</main>
+
+<script>
+"use strict";
+
+const MAX_TICKETS = 5000;
+
+// 測試時設 true；正式公開時建議設 false。
+const DEBUG_MODE = true;
+
+const RESULTS_URL =
+  "https://raw.githubusercontent.com/LTree0703/data-store-contents/main/result.json";
+
+const QUEUES = ["A", "B", "C", "D"];
+
+const views = {
+  loading: document.getElementById("loadingView"),
+  waiting: document.getElementById("waitingView"),
+  checker: document.getElementById("checkerView"),
+  error: document.getElementById("errorView")
+};
+
+const input = document.getElementById("ticketInput");
+const result = document.getElementById("result");
+const queueCard = document.getElementById("queueCard");
+const queueLetter = document.getElementById("queueLetter");
+const button = document.getElementById("checkButton");
+const waitingTicket = document.getElementById("waitingTicket");
+const versionLabel = document.getElementById("versionLabel");
+const updatedAt = document.getElementById("updatedAt");
+const ticketPreview = document.getElementById("ticketPreview");
+const ticketImage = document.getElementById("ticketImage");
+const errorDetails = document.getElementById("errorDetails");
+
+const refreshButtons = [
+  document.getElementById("refreshWaiting"),
+  document.getElementById("refreshResults"),
+  document.getElementById("retryButton")
+];
+
+let currentResults = null;
+let winnerLookup = null;
+let publicationTimestamp = null;
+let isLoading = false;
+let urlTicketError = "";
+let imageFailed = false;
+let previewDismissed = false;
+let nextRefreshAt = 0;
+
+function setPreviewVisible(visible) {
+  if (ticketPreview) {
+    ticketPreview.hidden =
+      previewDismissed || imageFailed || !visible;
+  }
+}
+
+function dismissPreview() {
+  previewDismissed = true;
+  setPreviewVisible(false);
+}
+
+function showView(name) {
+  for (const [key, element] of Object.entries(views)) {
+    element.hidden = key !== name;
+  }
+}
+
+function clearResult() {
+  result.hidden = true;
+  queueCard.hidden = true;
+  queueLetter.textContent = "";
+}
+
+function show(message, style = "") {
+  result.className = "result" + (style ? " " + style : "");
+  result.textContent = message;
+  result.hidden = false;
+  queueCard.hidden = true;
+  queueLetter.textContent = "";
+}
+
+function displayValue(value) {
+  const encoded = JSON.stringify(value);
+  return encoded === undefined ? "undefined" : encoded;
+}
+
+function normaliseTicket(value) {
+  const raw = String(value).trim();
+
+  if (!/^[0-9]{1,4}$/.test(raw)) {
+    throw new Error("請輸入 1–4 位數字飛號。");
+  }
+
+  const number = Number(raw);
+
+  if (number < 1 || number > MAX_TICKETS) {
+    throw new Error(
+      "有效獎券號碼係 0001–" +
+      String(MAX_TICKETS).padStart(4, "0") +
+      "，請重新輸入。"
+    );
+  }
+
+  return String(number).padStart(4, "0");
+}
+
+function getPublishTimestamp(data) {
+  const value = data.publishTime;
+
+  /*
+   * 捕捉組：
+   * 1 年、2 月、3 日、4 時、5 分、6 秒
+   * 7 完整時區、8 正負號、9 時區小時、10 時區分鐘
+   */
+  const match = typeof value === "string"
+    ? value.match(
+        /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(Z|([+-])(\d{2}):(\d{2}))$/
+      )
+    : null;
+
+  if (!match) {
+    throw new Error(
+      "publishTime 缺失或格式不符。" +
+      "\n實際值：" + displayValue(value) +
+      "\n正確格式例子：2026-11-01T10:30:00+08:00"
+    );
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const offsetHour = match[9] ? Number(match[9]) : 0;
+  const offsetMinute = match[10] ? Number(match[10]) : 0;
+
+  const leapYear =
+    year % 4 === 0 &&
+    (year % 100 !== 0 || year % 400 === 0);
+
+  const daysInMonth = [
+    31, leapYear ? 29 : 28, 31, 30, 31, 30,
+    31, 31, 30, 31, 30, 31
+  ];
+
+  if (
+    year < 1 ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth[month - 1] ||
+    hour > 23 ||
+    minute > 59 ||
+    second > 59 ||
+    offsetHour > 23 ||
+    offsetMinute > 59
+  ) {
+    throw new Error("publishTime 日期或時間無效：" + value);
+  }
+
+  const timestamp = Date.parse(value);
+
+  if (!Number.isFinite(timestamp)) {
+    throw new Error("publishTime 無法解析：" + value);
+  }
+
+  return timestamp;
+}
+
+function canPublish() {
+  return Boolean(
+    currentResults &&
+    currentResults.published === true &&
+    Number.isFinite(publicationTimestamp) &&
+    Date.now() >= publicationTimestamp
+  );
+}
+
+function validateResults(data) {
+  if (
+    !data ||
+    typeof data !== "object" ||
+    Array.isArray(data)
+  ) {
+    throw new Error("JSON 根節點必須係 object。");
+  }
+
+  if (typeof data.published !== "boolean") {
+    throw new Error(
+      "published 必須係 Boolean true 或 false。" +
+      "\n實際值：" + displayValue(data.published)
+    );
+  }
+
+  if (!data.published) {
+    return null;
+  }
+
+  const timestamp = getPublishTimestamp(data);
+
+  const checks = {
+    "totalTickets 係有效整數（1–5000）":
+      Number.isInteger(data.totalTickets) &&
+      data.totalTickets >= 1 &&
+      data.totalTickets <= MAX_TICKETS,
+
+    "winnerCount 係有效整數":
+      Number.isInteger(data.winnerCount) &&
+      data.winnerCount >= 1 &&
+      Number.isInteger(data.totalTickets) &&
+      data.winnerCount <= data.totalTickets,
+
+    "winners 係陣列":
+      Array.isArray(data.winners),
+
+    "winners 長度等於 winnerCount":
+      Array.isArray(data.winners) &&
+      data.winners.length === data.winnerCount
+  };
+
+  const failed = Object.entries(checks)
+    .filter(([, passed]) => !passed);
+
+  if (failed.length) {
+    console.table(
+      Object.entries(checks).map(([check, passed]) => ({
+        check, passed
+      }))
+    );
+
+    throw new Error(
+      "Invalid result metadata." +
+      "\n以下條件為 false：\n" +
+      failed.map(([name]) => "- " + name).join("\n") +
+      "\ntotalTickets：" + displayValue(data.totalTickets) +
+      "\nwinnerCount：" + displayValue(data.winnerCount) +
+      "\nwinners 長度：" +
+      (Array.isArray(data.winners) ? data.winners.length : "不適用")
+    );
+  }
+
+  const errors = [];
+  const firstSeen = new Map();
+
+  data.winners.forEach((ticket, index) => {
+    const isString = typeof ticket === "string";
+    const number = isString ? Number(ticket) : NaN;
+
+    const ticketChecks = {
+      "係 string": isString,
+      "係四位數字文字":
+        isString && /^[0-9]{4}$/.test(ticket),
+      "數值至少係 1":
+        isString && Number.isFinite(number) && number >= 1,
+      "數值不超過 totalTickets":
+        isString &&
+        Number.isFinite(number) &&
+        number <= data.totalTickets,
+      "冇重複": !firstSeen.has(ticket)
+    };
+
+    if (Object.values(ticketChecks).some(passed => !passed)) {
+      errors.push({
+        position: index + 1,
+        path: "winners[" + index + "]",
+        value: displayValue(ticket),
+        type: typeof ticket,
+        duplicateOf: firstSeen.has(ticket)
+          ? firstSeen.get(ticket)
+          : null,
+        checks: ticketChecks
+      });
+    }
+
+    if (!firstSeen.has(ticket)) {
+      firstSeen.set(ticket, index + 1);
+    }
+  });
+
+  if (errors.length) {
+    console.table(
+      errors.map(error => ({
+        position: error.position,
+        path: error.path,
+        value: error.value,
+        type: error.type,
+        duplicateOf: error.duplicateOf,
+        ...error.checks
+      }))
+    );
+
+    throw new Error(
+      "Invalid or duplicate winner numbers." +
+      "\n無效項目數：" + errors.length +
+      "\n\n" +
+      errors.map(error =>
+        "名單位置：" + error.position +
+        "\nJSON 位置：" + error.path +
+        "\n實際值：" + error.value +
+        "\n實際類型：" + error.type +
+        "\n檢查結果（true = 有效，false = 未通過）：\n" +
+        Object.entries(error.checks)
+          .map(([name, passed]) => "  " + name + ": " + passed)
+          .join("\n") +
+        (error.duplicateOf !== null
+          ? "\n首次出現位置：" + error.duplicateOf
+          : "")
+      ).join("\n\n")
+    );
+  }
+
+  return timestamp;
+}
+
+function buildWinnerLookup(data) {
+  // 保留 JSON 次序：
+  // 1–100 → A
+  // 101–170 → B
+  // 171–240 → C
+  // 241+ → D
+  
+  return new Map(
+    data.winners.map((ticket, index) => {
+    let queue;
+
+    if (index < 100) {
+      queue = 'A';
+    } else if (index < 170) {
+      queue = 'B';
+    } else if (index < 240) {
+      queue = 'C';
+    } else {
+      queue = 'D';
+    }
+
+    return [
+      ticket,
+      {
+        queue,
+        order: index + 1
+      }
+    ];
+    })
+  );
+}
+
+function readTicketFromUrl() {
+  const values = new URLSearchParams(location.search)
+    .getAll("ticket");
+
+  if (!values.length) return;
+
+  if (values.length !== 1) {
+    urlTicketError =
+      "連結有重複參數，請手動輸入獎券上面嘅號碼。";
+    return;
+  }
+
+  try {
+    input.value = normaliseTicket(values[0]);
+  } catch {
+    input.value = "";
+    urlTicketError =
+      "連結入面嘅參數格式不符，請手動輸入獎券上面嘅號碼。";
+  }
+}
+
+function renderWaitingResults() {
+  waitingTicket.textContent = input.value.trim()
+    ? "已帶入飛號：" + input.value
+    : "";
+
+  waitingTicket.hidden = !input.value.trim();
+  button.disabled = true;
+  showView("waiting");
+}
+
+function renderPublishedResults(data) {
+  versionLabel.textContent =
+    typeof data.version === "string" && data.version.trim()
+      ? "結果版本：" + data.version.trim()
+      : "";
+
+  updatedAt.textContent = "";
+
+  if (typeof data.updatedAt === "string") {
+    const date = new Date(data.updatedAt);
+
+    if (!Number.isNaN(date.getTime())) {
+      updatedAt.textContent =
+        "結果更新時間：" +
+        new Intl.DateTimeFormat("zh-HK", {
+          timeZone: "Asia/Hong_Kong",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        }).format(date) +
+        "（香港時間）";
+    }
+  }
+
+  showView("checker");
+}
+
+function showLoadError(error, stage) {
+  console.error("Result loading failed:", stage, error);
+
+  currentResults = null;
+  winnerLookup = null;
+  publicationTimestamp = null;
+  clearResult();
+  button.disabled = true;
+
+  const message = error && error.name === "AbortError"
+    ? "讀取逾時，請檢查網絡後再試。"
+    : String(error && error.message ? error.message : error);
+
+  // 即使診斷元素被移除，亦唔會阻止顯示錯誤畫面。
+  if (errorDetails) {
+    errorDetails.textContent = DEBUG_MODE
+      ? "錯誤階段：" + stage + "\n\n" + message
+      : "";
+    errorDetails.hidden = !DEBUG_MODE;
+  }
+
+  showView("error");
+}
+
+function checkTicket() {
+  if (isLoading || !currentResults || !winnerLookup) return;
+
+  if (!canPublish()) {
+    clearResult();
+    renderWaitingResults();
+    return;
+  }
+
+  let ticket;
+
+  try {
+    ticket = normaliseTicket(input.value);
+  } catch (error) {
+    show(error.message, "error");
+    return;
+  }
+
+  input.value = ticket;
+
+  if (Number(ticket) > currentResults.totalTickets) {
+    show(
+      "獎券號碼 " + ticket +
+      "\n呢張獎券唔喺今次抽獎範圍內。" +
+      "\n如有疑問，請向現場職員查詢。",
+      "error"
+    );
+    return;
+  }
+
+  dismissPreview();
+
+  const winner = winnerLookup.get(ticket);
+
+  if (winner) {
+    show(
+      "🎉 Ticket Number " + ticket + ", 恭喜中獎！",
+      "win"
+    );
+    queueLetter.textContent = winner.queue;
+    queueCard.hidden = false;
+  } else {
+    show(
+      "Ticket Number " + ticket +
+      "\n今次未有中獎，多謝你嘅參與！",
+      "nowin"
+    );
+  }
+}
+
+async function loadResults() {
+  if (isLoading) return;
+
+  isLoading = true;
+  currentResults = null;
+  winnerLookup = null;
+  publicationTimestamp = null;
+
+  clearResult();
+  setPreviewVisible(true);
+
+  if (errorDetails) {
+    errorDetails.textContent = "";
+    errorDetails.hidden = true;
+  }
+
+  button.disabled = true;
+  refreshButtons.forEach(element => {
+    element.disabled = true;
+  });
+
+  showView("loading");
+
+  let timeoutId;
+  let stage = "準備讀取 JSON";
+
+  try {
+    if (!RESULTS_URL.trim()) {
+      throw new Error("RESULTS_URL 未設定。");
+    }
+
+    const controller = new AbortController();
+
+    timeoutId = setTimeout(() => controller.abort(), 15000);
+
+    const url = new URL(RESULTS_URL);
+    url.searchParams.set("v", String(Date.now()));
+
+    stage = "下載 JSON";
+
+    const response = await fetch(url.href, {
+      cache: "no-store",
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "HTTP " + response.status + " " + response.statusText +
+        "\n請確認 result.json 檔案存在及可公開讀取。"
+      );
+    }
+
+    stage = "解析 JSON";
+    const data = await response.json();
+
+    stage = "驗證 JSON 資料及發布時間";
+    const timestamp = validateResults(data);
+
+    currentResults = data;
+    publicationTimestamp = timestamp;
+
+    if (canPublish()) {
+      stage = "建立中獎名單及隊伍";
+      winnerLookup = buildWinnerLookup(data);
+
+      stage = "顯示結果畫面";
+      renderPublishedResults(data);
+    } else {
+      renderWaitingResults();
+    }
+  } catch (error) {
+    showLoadError(error, stage);
+  } finally {
+    clearTimeout(timeoutId);
+    isLoading = false;
+
+    // 未發布時定期重新讀取，以取得最新開關及發布時間。
+    nextRefreshAt = Date.now() + 30000;
+
+    refreshButtons.forEach(element => {
+      element.disabled = false;
+    });
+
+    button.disabled = !(canPublish() && winnerLookup);
+  }
+
+  if (canPublish() && winnerLookup) {
+    if (urlTicketError) {
+      show(urlTicketError, "error");
+    } else if (input.value.trim()) {
+      checkTicket();
+    }
+  }
+}
+
+function monitorPublication() {
+  if (document.hidden || isLoading || !currentResults) return;
+
+  const ready = canPublish();
+
+  // 裝置時間被調返發布時間之前時，收起結果。
+  if (!ready && !views.checker.hidden) {
+    clearResult();
+    renderWaitingResults();
+  }
+
+  if (views.waiting.hidden) return;
+
+  /*
+   * 到發布時間立即重新下載。
+   * 未到時間或 published=false 時，每 30 秒重新讀取。
+   * 呢個係網頁開住時執行嘅程式，唔係伺服器排程。
+   */
+  if (ready || Date.now() >= nextRefreshAt) {
+    loadResults();
+  }
+}
+
+// 按鈕點擊即永久隱藏圖片，直至整頁重新載入。
+button.addEventListener("click", dismissPreview);
+
+document.getElementById("checkForm").addEventListener(
+  "submit",
+  event => {
+    event.preventDefault();
+    dismissPreview();
+    checkTicket();
+  }
+);
+
+input.addEventListener("input", () => {
+  clearResult();
+  urlTicketError = "";
+  // 已 dismissed 嘅圖片唔會重新出現。
+  setPreviewVisible(true);
+});
+
+refreshButtons.forEach(element => {
+  element.addEventListener("click", loadResults);
+});
+
+if (ticketPreview) {
+  ticketPreview.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+
+  ticketPreview.addEventListener("contextmenu", event => {
+    event.preventDefault();
+  });
+
+  ticketPreview.addEventListener("dragstart", event => {
+    event.preventDefault();
+  });
+}
+
+if (ticketImage) {
+  const handleImageError = () => {
+    imageFailed = true;
+    setPreviewVisible(false);
+  };
+
+  ticketImage.addEventListener("error", handleImageError);
+
+  if (ticketImage.complete && ticketImage.naturalWidth === 0) {
+    handleImageError();
+  }
+}
+
+setInterval(monitorPublication, 1000);
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) monitorPublication();
+});
+
+readTicketFromUrl();
+loadResults();
+</script>
+</body>
+</html>
